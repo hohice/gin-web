@@ -1,0 +1,74 @@
+version: '2'
+
+services:
+  db:
+    image: hub.c.163.com/library/mysql:5.7
+    container_name: mysql
+    restart: always
+    volumes:
+      #- db-data:/var/lib/mysql
+      - ./temp:/var/lib/mysql
+      #- zipkin-init-sql:/docker-entrypoint-initdb.d/
+      - ./data/initdata/zipkin.sql:/docker-entrypoint-initdb.d/init-zipkin.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+    ports:
+      # Port used for the Zipkin UI and HTTP Api
+      - ${MYSQL_TCP_PORT}:3306
+    networks: 
+      - default 
+      - app_net
+
+  zipkin:
+    image: openzipkin/zipkin:2.4.4
+    container_name: zipkin
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - STORAGE_TYPE=mysql
+      # Point the zipkin at the storage backend
+      - MYSQL_DB=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASS=${MYSQL_PASS}
+      - MYSQL_HOST=mysql
+      - MYSQL_TCP_PORT=3306
+      # Uncomment to enable scribe
+      # - SCRIBE_ENABLED=true
+      # Uncomment to enable self-tracing
+      # - SELF_TRACING_ENABLED=true
+      # Uncomment to enable debug logging
+      # - JAVA_OPTS=-Dlogging.level.zipkin=DEBUG -Dlogging.level.zipkin2=DEBUG
+    ports:
+      # Port used for the Zipkin UI and HTTP Api
+      - ${ZIPKIN_PORT}:9411
+      # Uncomment if you set SCRIBE_ENABLED=true
+      # - 9410:9410
+    networks: 
+      - default 
+      - app_net
+
+  gins:
+    build: .
+    container_name: gins
+    restart: always
+    depends_on:
+      - db
+      - zipkin
+    ports:
+      - ${HTTP_PORT}:9411
+    volumes:
+      - ./pkg/setting/testdata:/etc/walm
+    networks: 
+      - default 
+      - app_net
+    
+  
+
+networks: 
+  app_net: 
+    external: true
+
+
+
