@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"k8s.io/client-go/tools/remotecommand"
 
-	"walm/pkg/k8s"
-	"walm/router/api/util"
-	"walm/router/ex"
+	"github.com/hohice/gin-web/pkg/k8s"
+	"github.com/hohice/gin-web/router/ex"
+	"github.com/hohice/gin-web/router/handler/util"
 )
 
 // ExecShell godoc
@@ -35,9 +35,9 @@ func ExecShell(c *gin.Context) {
 		shell := c.Query("shell")
 
 		request := map[string]string{
-			"namespace": values[0],
-			"pod":       values[1],
-			"container": values[2],
+			"namespace": values["namespace"],
+			"pod":       values["pod"],
+			"container": values["container"],
 			"shell":     shell,
 		}
 

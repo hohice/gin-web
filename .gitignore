@@ -13,5 +13,7 @@
 
 
 vendor
-temp/*
+temp/
 glide.lock
+
+.vscode

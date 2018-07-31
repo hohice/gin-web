@@ -1,5 +1,5 @@
-TARG.Name:=pm
-TRAG.Gopkg:=transwarp/product-mata-serv
+TARG.Name:=ginS
+TRAG.Gopkg:=github.com/hohice/gin-web
 TRAG.Version:=$(TRAG.Gopkg)/pkg/version
 
 DOCKER_TAGS=latest

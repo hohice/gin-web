@@ -7,7 +7,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	. "walm/pkg/util/log"
+	. "github.com/hohice/gin-web/pkg/util/log"
 )
 
 var DefaultApiserverClient *kubernetes.Clientset

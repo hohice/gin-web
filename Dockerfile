@@ -1,13 +1,13 @@
-FROM 172.16.1.99/transwarp/walm-builder:1.0 as builder
+FROM hohice/ginS-builder:1.0 as builder
 
-WORKDIR /go/src/transwarp/github.com/hohice/gin-web
+WORKDIR /go/src/github.com/hohice/gin-web
 COPY . .
 
 RUN make swag && make generate && make install
 
-FROM 172.16.1.99/gold/helm:tos18-latest
+FROM golang:1.10.2-alpine3.7 
 #RUN apk add --update ca-certificates && update-ca-certificates
 COPY --from=builder /go/bin/* /usr/local/bin/
 
-CMD [ "ginS","serv" ] 
-#ENTRYPOINT [ "ginS","serv" ]
+#CMD [ "ginS","serv" ] 
+ENTRYPOINT [ "ginS","serv" ]

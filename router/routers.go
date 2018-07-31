@@ -6,8 +6,6 @@ import (
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 
-	stdot "github.com/opentracing/opentracing-go"
-
 	_ "github.com/hohice/gin-web/docs"
 	. "github.com/hohice/gin-web/pkg/util/log"
 
@@ -15,29 +13,28 @@ import (
 	"github.com/hohice/gin-web/router/middleware"
 )
 
-// @title Walm
+// @title ginS
 // @version 1.0.0
-// @description Warp application lifecycle manager.
+// @description Gin Web API server starter.
 
-// @contact.name bing.han
-// @contact.url http://transwarp.io
-// @contact.email bing.han@transwarp.io
+// @contact.name hohice
+// @contact.url https://github.com/hohice
+// @contact.email hohice@163.com
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @BasePath /walm/api/v1
+// @BasePath /api/v1
 
-func InitRouter(oauth, runmode bool) *gin.Engine {
+func InitRouter(oauth, Debug bool) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
-	//r.Use(gin.RecoveryWithWriter(Log.Out))
-
-	if runmode {
+	if Debug {
 		gin.SetMode(gin.DebugMode)
 		Log.SetLevel(logrus.DebugLevel)
 		r.Use(gin.LoggerWithWriter(Log.Out))
+		r.Use(gin.RecoveryWithWriter(Log.Out))
 	} else {
 		Log.SetLevel(logrus.InfoLevel)
 		//add Prometheus Metric
@@ -46,7 +43,10 @@ func InitRouter(oauth, runmode bool) *gin.Engine {
 	}
 
 	//enable swagger UI
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
+		"swag": "password",
+	}))
+	authorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//add Probe for readiness and liveness
 	r.GET("/readiness", readinessProbe)
@@ -57,12 +57,9 @@ func InitRouter(oauth, runmode bool) *gin.Engine {
 	if oauth {
 		apiv1.Use(middleware.JWT())
 	}
-	if !runmode && middleware.Tracer != nil {
+	if !Debug && middleware.Tracer != nil {
 		//add opentracing
-		psr := func(spancontext stdot.SpanContext) stdot.StartSpanOption {
-			return stdot.ChildOf(spancontext)
-		}
-		apiv1.Use(middleware.SpanFromHeaders(middleware.Tracer, "Walm", psr, false), middleware.InjectToHeaders(middleware.Tracer, false))
+		apiv1.Use(middleware.SpanFromHeaders(middleware.Tracer, "ginS", middleware.CPsr, false), middleware.InjectToHeaders(middleware.Tracer, false))
 	}
 	{
 		podGroup := apiv1.Group("pod")

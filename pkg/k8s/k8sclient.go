@@ -2,13 +2,15 @@ package k8s
 
 import (
 	"time"
-	. "walm/pkg/util/log"
+
+	. "github.com/hohice/gin-web/pkg/util/log"
+
+	clientsetex "transwarp/application-instance/pkg/client/clientset/versioned"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 	discovery "k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	clientsetex "transwarp/application-instance/pkg/client/clientset/versioned"
 )
 
 const (

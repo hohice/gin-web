@@ -1,7 +1,7 @@
 package main
 
 import (
-	"transwarp/product-mata/pkg/version"
+	"github.com/hohice/gin-web/pkg/version"
 
 	"github.com/spf13/cobra"
 )

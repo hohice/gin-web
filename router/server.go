@@ -1,11 +1,17 @@
 package router
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"time"
-	"walm/pkg/setting"
-	"walm/router/middleware"
+
+	"github.com/hohice/gin-web/pkg/setting"
+	. "github.com/hohice/gin-web/pkg/util/log"
+	"github.com/hohice/gin-web/router/middleware"
 )
 
 type Server struct {
@@ -16,7 +22,7 @@ type Server struct {
 	OauthEnable             bool
 	ReadTimeout             time.Duration
 	WriteTimeout            time.Duration
-	RunMode                 bool
+	Debug                   bool
 	ZipkinUrl               string
 	server                  *http.Server
 }
@@ -31,7 +37,7 @@ func NewServer(errch chan error) *Server {
 		TlsCertFile: conf.Secret.TlsCert,
 		TlsKeyFile:  conf.Secret.TlsKey,
 
-		RunMode:   conf.Debug,
+		Debug:     conf.Debug,
 		ZipkinUrl: conf.Trace.ZipkinUrl,
 		server: &http.Server{
 			Addr:           fmt.Sprintf(":%d", conf.Http.HTTPPort),
@@ -43,19 +49,25 @@ func NewServer(errch chan error) *Server {
 }
 
 func (server *Server) StartServer() error {
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+
 	go func() {
 
-		if !server.RunMode {
+		if !server.Debug {
 			//EndTrac will be called when close the server
 			//so the init need be placed here
-			middleware.InitTracer(server.ZipkinUrl, server.Port)
-			defer middleware.EndTrace()
+			if err, closeble := middleware.InitTracer("ginS", server.ZipkinUrl, server.Port); err != nil {
+				server.ApiErrCh <- err
+				return
+			} else {
+				defer closeble()
+			}
 		}
 
-		router := InitRouter(server.OauthEnable, server.RunMode)
+		router := InitRouter(server.OauthEnable, server.Debug)
 
 		server.server.Handler = router
-		//walm_api.AddPrometheusHandler(restful.DefaultContainer)
 
 		if server.TlsEnable {
 			if err := server.server.ListenAndServeTLS(server.TlsCertFile, server.TlsKeyFile); err != nil {
@@ -68,6 +80,14 @@ func (server *Server) StartServer() error {
 		}
 
 	}()
+
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.server.Shutdown(ctx); err != nil {
+		Log.Fatalln("Server Shutdown:", err)
+	}
+	server.ApiErrCh <- errors.New("Recv Signal Interrupt, Shutdown Server ...")
 
 	return nil
 

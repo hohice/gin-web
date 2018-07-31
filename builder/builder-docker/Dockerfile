@@ -7,8 +7,8 @@ FROM golang:1.10.2-alpine3.7 as builder
 RUN apk add --no-cache git curl openssl make gcc
 
 RUN go get -u -v github.com/Masterminds/glide
-RUN go get -u -v github.com/swaggo/swag
-RUN cd /go/src/github.com/swaggo/swag && /usr/bin/make deps && /usr/bin/make
+RUN go get -u -v github.com/hohice/swag
+RUN cd /go/src/github.com/hohice/swag && /usr/bin/make deps && /usr/bin/make
 
 # swagger-0.13.0
 # RUN go get github.com/go-swagger/go-swagger/cmd/swagger

@@ -11,49 +11,46 @@ import (
 	zipkinot "github.com/openzipkin/zipkin-go-opentracing"
 )
 
+const spanContextKey = "span"
+
+var (
+	ErrSpanNotFound = errors.New("span was not found in context")
+)
+
 var Tracer stdot.Tracer
 var collector zipkinot.Collector
 
-func InitTracer(url string, port int) error {
-	var err error
+type Closeble func()
+
+func InitTracer(serviceName, url string, port int) (err error, close Closeble) {
+	close = endTrace
 	if url != "" {
 		collector, err = zipkinot.NewHTTPCollector(url)
 		if err != nil {
-			return err
+			return
 		}
 
 		var (
 			debug       = false
 			hostPort    = fmt.Sprintf("localhost:%d", port)
-			serviceName = "walm"
+			serviceName = serviceName
 		)
 		recorder := zipkinot.NewRecorder(collector, debug, hostPort, serviceName)
 		Tracer, err = zipkinot.NewTracer(recorder)
 		if err != nil {
-			return err
+			return
 		}
 	} else {
-		return errors.New("zipin url is none")
+		err = errors.New("zipin url is none")
 	}
-	return nil
+	return
 }
 
-/*
-func EnableTrace() gin.HandlerFunc {
-	return trace.SpanFromHeaders(Tracer, "Walm", stdot.ChildOf, false)
+func endTrace() {
+	if collector != nil {
+		collector.Close()
+	}
 }
-*/
-
-func EndTrace() {
-	defer collector.Close()
-}
-
-const spanContextKey = "span"
-
-// Errors which may occur at operation time.
-var (
-	ErrSpanNotFound = errors.New("span was not found in context")
-)
 
 // NewSpan returns gin.HandlerFunc (middleware) that starts a new span and injects it to request context.
 //
@@ -74,9 +71,16 @@ func NewSpan(tracer stdot.Tracer, operationName string, opts ...stdot.StartSpanO
 }
 
 // ParentSpanReferenceFunc determines how to reference parent span
-//
 // See opentracing.SpanReferenceType
 type ParentSpanReferenceFunc func(stdot.SpanContext) stdot.StartSpanOption
+
+var CPsr = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
+	return stdot.ChildOf(spancontext)
+}
+
+var FPsr = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
+	return stdot.FollowsFrom(spancontext)
+}
 
 // SpanFromHeaders returns gin.HandlerFunc (middleware) that extracts parent span data from HTTP headers and
 // starts a new span referenced to parent with ParentSpanReferenceFunc.
@@ -104,6 +108,9 @@ func SpanFromHeaders(tracer stdot.Tracer, operationName string, psr ParentSpanRe
 		defer span.Finish()
 
 		ctx.Next()
+
+		//ext.HTTPStatusCode.Set(span,ctx.Writer.Status())
+		//ctx.Set(spanContextKey, span)
 	}
 }
 
@@ -135,6 +142,9 @@ func SpanFromContext(tracer stdot.Tracer, operationName string, abortOnErrors bo
 		defer span.Finish()
 
 		ctx.Next()
+
+		//ext.HTTPStatusCode.Set(span,ctx.Writer.Status())
+		//ctx.Set(spanContextKey, span)
 	}
 }
 

@@ -4,21 +4,19 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-	. "walm/pkg/util/log"
-	"walm/pkg/util/oauth"
+
+	"github.com/hohice/gin-web/pkg/jwt"
+	. "github.com/hohice/gin-web/pkg/util/log"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
-var confEnvName = "WALM_CONF_PATH"
+var confEnvName = "GINS_CONF_PATH"
 
-var configPath = "/etc/walm/"
+var configPath = "/etc/ginS/"
 
-//for test
-//var configPath = "/home/hanbing/myworkspace/go/src/walm/pkg/setting/conf"
-
-var DefaultWalmHome = filepath.Join(HomeDir(), ".walm")
+var DefaultWalmHome = filepath.Join(HomeDir(), ".ginS")
 
 var Config config
 
@@ -69,7 +67,7 @@ type config struct {
 }
 
 // Init sets values from the environment.
-func init() {
+func Init() {
 	vp := viper.New()
 	vp.SetConfigType("yaml")
 	vp.SetConfigName("conf")
@@ -123,7 +121,7 @@ func verifyConfig() {
 	}
 	if Config.Auth.Enable {
 		if len(Config.Auth.JwtSecret) > 0 {
-			oauth.SetJwtSecret(Config.Auth.JwtSecret)
+			jwt.SetJwtSecret(Config.Auth.JwtSecret)
 		} else {
 			Log.Fatalln("If enable oauth ,please set JwtSecret")
 		}

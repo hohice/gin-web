@@ -1,8 +1,11 @@
 //+build e2e
+
 package test
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -23,6 +26,14 @@ var routers *gin.Engine
 
 //SetUpSuite
 func (e2e *e2eSuite) SetUpSuite() {
+	testPath, err := os.Getwd()
+	c.Assert(err, check.IsNil)
+
+	cleanup := resetEnv()
+	defer cleanup()
+
+	testConfPath := filepath.Join(testPath, "../pkg/setting/testdata")
+	os.Setenv(confEnvName, testConfPath)
 	routers = router.InitRouter(false, false)
 }
 
@@ -32,14 +43,21 @@ func (e2e *e2eSuite) SetUpSuite() {
 
 func (e2e *e2eSuite) Test_readinessProbe(c *check.C) {
 	uri := "/readiness"
-	code, body := Get(uri, routers)
+	code, _ := Get(uri, routers)
 
 	c.Assert(code, check.Equals, http.StatusOK, "/readiness return none OK!")
 }
 
 func (e2e *e2eSuite) Test_livenessProbe(c *check.C) {
 	uri := "/liveness"
-	code, body := Get(uri, routers)
+	code, _ := Get(uri, routers)
+
+	c.Assert(code, check.Equals, http.StatusOK, "/liveness return none OK!")
+}
+
+func (e2e *e2eSuite) Test_Prometheus(c *check.C) {
+	uri := "/metrics"
+	code, _ := Get(uri, routers)
 
 	c.Assert(code, check.Equals, http.StatusOK, "/liveness return none OK!")
 }

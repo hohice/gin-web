@@ -57,14 +57,12 @@ services:
       - db
       - zipkin
     ports:
-      - ${HTTP_PORT}:9411
+      - ${HTTP_PORT}:9000
     volumes:
       - ./pkg/setting/testdata:/etc/walm
     networks: 
       - default 
       - app_net
-    
-  
 
 networks: 
   app_net: 

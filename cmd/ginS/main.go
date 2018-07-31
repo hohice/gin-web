@@ -5,23 +5,23 @@ import (
 
 	"github.com/spf13/cobra"
 
-	. "walm/pkg/util/log"
+	"github.com/hohice/gin-web/pkg/setting"
+	. "github.com/hohice/gin-web/pkg/util/log"
 )
 
-var globalUsage = `The Warp application lifecycle manager
+var globalUsage = `The Gin web API server starter
 
-To begin working with walm, run the 'walm serv' command:
+To begin working with ginS, run the 'serv' command:
 
-	$ walm serv
+	$ ginS serv
 
-Environment:
-  $KUBECONFIG         set an alternative Kubernetes configuration file (default "~/.kube/config")
 `
+var conf setting.Config
 
 func newRootCmd(args []string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "walm",
-		Short:        "The Warp application lifecycle manager.",
+		Use:          "ginS",
+		Short:        "The Gin web API server starter.",
 		Long:         globalUsage,
 		SilenceUsage: true,
 	}
@@ -33,6 +33,7 @@ func newRootCmd(args []string) *cobra.Command {
 	)
 
 	flags.Parse(args)
+	setting.Init()
 
 	return cmd
 }
