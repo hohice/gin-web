@@ -20,6 +20,17 @@ import (
 
 var defaultMetricPath = "/metrics"
 
+// Metric is a definition for the name, description, type, ID, and
+// prometheus.Collector type (i.e. CounterVec, Summary, etc) of each metric
+type Metric struct {
+	MetricCollector prometheus.Collector
+	ID              string
+	Name            string
+	Description     string
+	Type            string
+	Args            []string
+}
+
 // Standard default metrics
 //	counter, counter_vec, gauge, gauge_vec,
 //	histogram, histogram_vec, summary, summary_vec
@@ -55,35 +66,7 @@ var standardMetrics = []*Metric{
 	reqSz,
 }
 
-/*
-RequestCounterURLLabelMappingFn is a function which can be supplied to the middleware to control
-the cardinality of the request counter's "url" label, which might be required in some contexts.
-For instance, if for a "/customer/:name" route you don't want to generate a time series for every
-possible customer name, you could use this function:
-func(c *gin.Context) string {
-	url := c.Request.URL.String()
-	for _, p := range c.Params {
-		if p.Key == "name" {
-			url = strings.Replace(url, p.Value, ":name", 1)
-			break
-		}
-	}
-	return url
-}
-which would map "/customer/alice" and "/customer/bob" to their template "/customer/:name".
-*/
 type RequestCounterURLLabelMappingFn func(c *gin.Context) string
-
-// Metric is a definition for the name, description, type, ID, and
-// prometheus.Collector type (i.e. CounterVec, Summary, etc) of each metric
-type Metric struct {
-	MetricCollector prometheus.Collector
-	ID              string
-	Name            string
-	Description     string
-	Type            string
-	Args            []string
-}
 
 // Prometheus contains the metrics gathered by the instance and its path
 type Prometheus struct {
@@ -311,7 +294,7 @@ func (p *Prometheus) registerMetrics(subsystem string) {
 	for _, metricDef := range p.MetricsList {
 		metric := NewMetric(metricDef, subsystem)
 		if err := prometheus.Register(metric); err != nil {
-			Log.Infof("%s could not be registered: ", metricDef.Name, err)
+			Log.Warnf("%s could not be registered: ", metricDef.Name, err)
 		} else {
 			Log.Infof("%s registered.", metricDef.Name)
 		}

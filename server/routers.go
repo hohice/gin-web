@@ -1,4 +1,4 @@
-package router
+package server
 
 import (
 	"github.com/gin-gonic/gin"
@@ -9,8 +9,8 @@ import (
 	_ "github.com/hohice/gin-web/docs"
 	. "github.com/hohice/gin-web/pkg/util/log"
 
-	"github.com/hohice/gin-web/router/ex"
-	"github.com/hohice/gin-web/router/middleware"
+	"github.com/hohice/gin-web/server/ex"
+	"github.com/hohice/gin-web/server/middleware"
 )
 
 // @title ginS
@@ -26,8 +26,9 @@ import (
 
 // @BasePath /api/v1
 
-func InitRouter(oauth, Debug bool) *gin.Engine {
+func InitRouter(Debug bool) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
+
 	r := gin.New()
 
 	if Debug {
@@ -43,10 +44,7 @@ func InitRouter(oauth, Debug bool) *gin.Engine {
 	}
 
 	//enable swagger UI
-	authorized := r.Group("/", gin.BasicAuth(gin.Accounts{
-		"swag": "password",
-	}))
-	authorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", gin.BasicAuth(gin.Accounts{"swag": "password"}), ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	//add Probe for readiness and liveness
 	r.GET("/readiness", readinessProbe)
@@ -54,15 +52,12 @@ func InitRouter(oauth, Debug bool) *gin.Engine {
 
 	//define api group
 	apiv1 := r.Group("/api/v1")
-	if oauth {
-		apiv1.Use(middleware.JWT())
-	}
-	if !Debug && middleware.Tracer != nil {
-		//add opentracing
-		apiv1.Use(middleware.SpanFromHeaders(middleware.Tracer, "ginS", middleware.CPsr, false), middleware.InjectToHeaders(middleware.Tracer, false))
+
+	if !Debug {
+		apiv1.Use(middleware.SpanFromHeaders("api", middleware.CPsr, false), middleware.InjectToHeaders(false))
 	}
 	{
-		podGroup := apiv1.Group("pod")
+		podGroup := apiv1.Group("pod").Use(middleware.JWT())
 		{
 			podGroup.GET("/:namespace/:pod/shell/:container")
 		}

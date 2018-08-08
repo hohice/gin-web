@@ -9,7 +9,7 @@ services:
       #- db-data:/var/lib/mysql
       - ./temp:/var/lib/mysql
       #- zipkin-init-sql:/docker-entrypoint-initdb.d/
-      - ./data/initdata/zipkin.sql:/docker-entrypoint-initdb.d/init-zipkin.sql
+      - ./db/initdata/zipkin.sql:/docker-entrypoint-initdb.d/init-zipkin.sql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}

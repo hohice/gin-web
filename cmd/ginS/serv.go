@@ -2,7 +2,7 @@ package main
 
 import (
 	. "github.com/hohice/gin-web/pkg/util/log"
-	"github.com/hohice/gin-web/router"
+	"github.com/hohice/gin-web/server"
 
 	"github.com/spf13/cobra"
 )
@@ -43,9 +43,9 @@ func newServCmd() *cobra.Command {
 func (sc *ServCmd) run() error {
 	apiErrCh := make(chan error)
 
-	server := router.NewServer(apiErrCh)
+	serv := server.NewServer(apiErrCh)
 
-	if err := server.StartServer(); err != nil {
+	if err := serv.StartServer(); err != nil {
 		Log.Errorf("start API server failed:%s exiting\n", err)
 		return err
 	} else {

@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hohice/gin-web/pkg/jwt"
 	. "github.com/hohice/gin-web/pkg/util/log"
 
 	"github.com/fsnotify/fsnotify"
@@ -18,13 +17,14 @@ var configPath = "/etc/ginS/"
 
 var DefaultWalmHome = filepath.Join(HomeDir(), ".ginS")
 
-var Config config
+var Config Configs
 
 var regNotifyChannel []*chan bool
 
-type config struct {
-	Home  string `mapstructure:"home"`
-	Debug bool   `mapstructure:"debug"`
+type Configs struct {
+	Service string `mapstructure:"service"`
+	Home    string `mapstructure:"home"`
+	Debug   bool   `mapstructure:"debug"`
 
 	Http struct {
 		HTTPPort     int           `mapstructure:"port"`
@@ -61,8 +61,10 @@ type config struct {
 	} `mapstructure:"trace"`
 
 	Auth struct {
-		Enable    bool   `mapstructure:"enalbe"`
-		JwtSecret string `mapstructure:"jwtsecret"`
+		Enable      bool   `mapstructure:"enable"`
+		JwtSecret   string `mapstructure:"jwtsecret"`
+		TokenLookup string `mapstructure:"tokenlookup"`
+		AuthScheme  string `mapstructure:"authscheme"`
 	} `mapstructure:"auth"`
 }
 
@@ -94,7 +96,6 @@ func Init() {
 	})
 	defer vp.WatchConfig()
 
-	verifyConfig()
 }
 
 func RegNotifyChannel(channel *chan bool) {
@@ -112,19 +113,5 @@ func getEnv() (string, bool) {
 		return str, true
 	} else {
 		return str, false
-	}
-}
-
-func verifyConfig() {
-	if Config.Http.HTTPPort == 0 {
-		Log.Fatalln("start API server failed, please spec Http port")
-	}
-	if Config.Auth.Enable {
-		if len(Config.Auth.JwtSecret) > 0 {
-			jwt.SetJwtSecret(Config.Auth.JwtSecret)
-		} else {
-			Log.Fatalln("If enable oauth ,please set JwtSecret")
-		}
-
 	}
 }

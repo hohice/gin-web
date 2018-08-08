@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hohice/gin-web/pkg/setting"
 	stdot "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	zipkinot "github.com/openzipkin/zipkin-go-opentracing"
@@ -17,13 +18,30 @@ var (
 	ErrSpanNotFound = errors.New("span was not found in context")
 )
 
-var Tracer stdot.Tracer
+var tracer stdot.Tracer
 var collector zipkinot.Collector
 
-type Closeble func()
+var (
+	serviceName, url string
+	port             int
+)
 
-func InitTracer(serviceName, url string, port int) (err error, close Closeble) {
-	close = endTrace
+func init() {
+	registerSelf(func(conf *setting.Configs) (error, Closeble) {
+		serviceName = conf.Service
+		url = conf.Trace.ZipkinUrl
+		port = conf.Http.HTTPPort
+		return InitTracer()
+	})
+}
+
+func InitTracer() (err error, close Closeble) {
+	close = func() {
+		if collector != nil {
+			collector.Close()
+		}
+	}
+
 	if url != "" {
 		collector, err = zipkinot.NewHTTPCollector(url)
 		if err != nil {
@@ -36,7 +54,7 @@ func InitTracer(serviceName, url string, port int) (err error, close Closeble) {
 			serviceName = serviceName
 		)
 		recorder := zipkinot.NewRecorder(collector, debug, hostPort, serviceName)
-		Tracer, err = zipkinot.NewTracer(recorder)
+		tracer, err = zipkinot.NewTracer(recorder)
 		if err != nil {
 			return
 		}
@@ -46,16 +64,10 @@ func InitTracer(serviceName, url string, port int) (err error, close Closeble) {
 	return
 }
 
-func endTrace() {
-	if collector != nil {
-		collector.Close()
-	}
-}
-
 // NewSpan returns gin.HandlerFunc (middleware) that starts a new span and injects it to request context.
 //
 // It calls ctx.Next() to measure execution time of all following handlers.
-func NewSpan(tracer stdot.Tracer, operationName string, opts ...stdot.StartSpanOption) gin.HandlerFunc {
+func NewSpan(operationName string, opts ...stdot.StartSpanOption) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		span := tracer.StartSpan(operationName, opts...)
 		ext.HTTPMethod.Set(span, ctx.Request.Method)
@@ -88,7 +100,7 @@ var FPsr = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
 // It calls ctx.Next() to measure execution time of all following handlers.
 //
 // Behaviour on errors determined by abortOnErrors option. If it set to true request handling will be aborted with error.
-func SpanFromHeaders(tracer stdot.Tracer, operationName string, psr ParentSpanReferenceFunc,
+func SpanFromHeaders(operationName string, psr ParentSpanReferenceFunc,
 	abortOnErrors bool, advancedOpts ...stdot.StartSpanOption) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		spanContext, err := tracer.Extract(stdot.TextMap, stdot.HTTPHeadersCarrier(ctx.Request.Header))
@@ -120,7 +132,7 @@ func SpanFromHeaders(tracer stdot.Tracer, operationName string, psr ParentSpanRe
 // It calls ctx.Next() to measure execution time of all following handlers.
 //
 // Behaviour on errors determined by abortOnErrors option. If it set to true request handling will be aborted with error.
-func SpanFromContext(tracer stdot.Tracer, operationName string, abortOnErrors bool,
+func SpanFromContext(operationName string, abortOnErrors bool,
 	advancedOpts ...stdot.StartSpanOption) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var opts []stdot.StartSpanOption
@@ -154,7 +166,7 @@ func SpanFromContext(tracer stdot.Tracer, operationName string, abortOnErrors bo
 // In this case you have to save request headers (ctx.Request.Header) and pass it to next level request.
 //
 // Behaviour on errors determined by abortOnErrors option. If it set to true request handling will be aborted with error.
-func InjectToHeaders(tracer stdot.Tracer, abortOnErrors bool) gin.HandlerFunc {
+func InjectToHeaders(abortOnErrors bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var spanContext stdot.SpanContext
 		if span, typeOk := GetSpan(ctx); typeOk {

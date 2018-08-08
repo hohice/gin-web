@@ -1,3 +1,4 @@
+service: "ginS"
 home: 
 debug: false
 http:
@@ -23,5 +24,7 @@ kube:
 trace:
   zipkin_url: "http://zipkin:9411/api/v1/spans"
 auth: 
-  enalbe: false
+  enable: ""
   jwtsecret: ""
+  authscheme: ""
+  tokenlookup: ""

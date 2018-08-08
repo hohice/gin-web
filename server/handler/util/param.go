@@ -3,7 +3,7 @@ package util
 import (
 	"errors"
 
-	"github.com/hohice/gin-web/router/ex"
+	"github.com/hohice/gin-web/server/ex"
 
 	"github.com/gin-gonic/gin"
 )

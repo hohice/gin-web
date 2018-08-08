@@ -1,4 +1,4 @@
-package router
+package server
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 
 	"github.com/hohice/gin-web/pkg/setting"
 	. "github.com/hohice/gin-web/pkg/util/log"
-	"github.com/hohice/gin-web/router/middleware"
+	"github.com/hohice/gin-web/server/middleware"
 )
 
 type Server struct {
@@ -19,7 +19,6 @@ type Server struct {
 	Port                    int
 	TlsEnable               bool
 	TlsCertFile, TlsKeyFile string
-	OauthEnable             bool
 	ReadTimeout             time.Duration
 	WriteTimeout            time.Duration
 	Debug                   bool
@@ -28,17 +27,18 @@ type Server struct {
 }
 
 func NewServer(errch chan error) *Server {
+	if setting.Config.Http.HTTPPort == 0 {
+		Log.Fatalln("start API server failed, please spec Http port")
+	}
 	conf := setting.Config
 	return &Server{
 		ApiErrCh: errch,
 
-		OauthEnable: conf.Auth.Enable,
 		TlsEnable:   conf.Secret.Tls,
 		TlsCertFile: conf.Secret.TlsCert,
 		TlsKeyFile:  conf.Secret.TlsKey,
 
-		Debug:     conf.Debug,
-		ZipkinUrl: conf.Trace.ZipkinUrl,
+		Debug: conf.Debug,
 		server: &http.Server{
 			Addr:           fmt.Sprintf(":%d", conf.Http.HTTPPort),
 			ReadTimeout:    conf.Http.ReadTimeout,
@@ -53,20 +53,13 @@ func (server *Server) StartServer() error {
 	signal.Notify(quit, os.Interrupt)
 
 	go func() {
-
-		if !server.Debug {
-			//EndTrac will be called when close the server
-			//so the init need be placed here
-			if err, closeble := middleware.InitTracer("ginS", server.ZipkinUrl, server.Port); err != nil {
-				server.ApiErrCh <- err
-				return
-			} else {
-				defer closeble()
-			}
+		if err := middleware.Init(); err != nil {
+			server.ApiErrCh <- err
+		} else {
+			defer middleware.Close()
 		}
 
-		router := InitRouter(server.OauthEnable, server.Debug)
-
+		router := InitRouter(server.Debug)
 		server.server.Handler = router
 
 		if server.TlsEnable {

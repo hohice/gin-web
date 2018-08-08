@@ -7,8 +7,8 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/hohice/gin-web/pkg/k8s"
-	"github.com/hohice/gin-web/router/ex"
-	"github.com/hohice/gin-web/router/handler/util"
+	"github.com/hohice/gin-web/server/ex"
+	"github.com/hohice/gin-web/server/handler/util"
 )
 
 // ExecShell godoc

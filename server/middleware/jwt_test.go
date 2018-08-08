@@ -1,4 +1,4 @@
-package jwt
+package middleware
 
 import (
 	"testing"
@@ -8,11 +8,11 @@ import (
 
 func Test(t *testing.T) { check.TestingT(t) }
 
-type authSuite struct{}
+type jwtSuite struct{}
 
-var _ = check.Suite(&authSuite{})
+var _ = check.Suite(&jwtSuite{})
 
-func (as *authSuite) Test_auth(c *check.C) {
+func (as *jwtSuite) Test_auth(c *check.C) {
 	SetJwtSecret("walm-test")
 	enstr, err := GenerateToken("username", "password")
 	c.Assert(err, check.IsNil)
