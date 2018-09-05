@@ -6,6 +6,7 @@ const (
 	SUCCESS        = http.StatusOK
 	INTERNAL_ERROR = http.StatusInternalServerError
 	INVALID_PARAMS = http.StatusBadRequest
+	ERROR_LIMIT    = http.StatusTooManyRequests
 
 	ERROR_AUTH_CHECK_TOKEN_FAIL    = 10001
 	ERROR_AUTH_CHECK_TOKEN_TIMEOUT = 10002
@@ -20,6 +21,7 @@ var MsgFlags = map[int]string{
 	SUCCESS:        "ok",
 	INTERNAL_ERROR: "Internal Server error",
 	INVALID_PARAMS: "Invalid Name supplied!",
+	ERROR_LIMIT:    "API rate limit exceeded",
 
 	ERROR_AUTH_CHECK_TOKEN_FAIL:    "Token auth failed",
 	ERROR_AUTH_CHECK_TOKEN_TIMEOUT: "Token time out",

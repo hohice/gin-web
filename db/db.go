@@ -2,10 +2,26 @@ package db
 
 import (
 	"database/sql"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/hohice/gin-web/db/mapper"
 )
 
-DB *sql.DB
+var db *sql.DB
 
-func InitDB(){
-	
+func InitDB() (err error) {
+	if db, err = sql.Open("mysql", "user:password@/dbname"); err != nil {
+		return err
+	}
+	return
+}
+
+func Close() {
+	db.Close()
+}
+
+func GetUserMapper() *mapper.UserMapper {
+	return &mapper.UserMapper{
+		DB: db,
+	}
 }

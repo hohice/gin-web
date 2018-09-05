@@ -1,18 +1,17 @@
-TARG.Name:=ginS
-TRAG.Gopkg:=github.com/hohice/gin-web
-TRAG.Version:=$(TRAG.Gopkg)/pkg/version
+GING.Name:=ginS
+GING.Gopkg:=github.com/hohice/gin-web
+GING.Version:=$(GING.Gopkg)/pkg/version
 
 DOCKER_TAGS=latest
 
 define get_build_flags
     $(eval SHORT_VERSION=$(shell git describe --tags --always --dirty="-dev"))
     $(eval SHA1_VERSION=$(shell git show --quiet --pretty=format:%H))
-	$(eval DATE=$(shell date +'%Y-%m-%dT%H:%M:%S'))
-	$(eval BUILD_FLAG= -X $(TRAG.Version).ShortVersion="$(SHORT_VERSION)" \
-		-X $(TRAG.Version).GitSha1Version="$(SHA1_VERSION)" \
-		-X $(TRAG.Version).BuildDate="$(DATE)")
+	$(eval DATE=$(shell date -u '%Y-%m-%d %H:%M:%S'))
+	$(eval BUILD_FLAG= -X $(GING.Version).ShortVersion="$(SHORT_VERSION)" \
+		-X $(GING.Version).GitSha1Version="$(SHA1_VERSION)" \
+		-X $(GING.Version).BuildDate="$(DATE)")
 endef
-
 
 .PHONY: init-vendor
 init-vendor:
@@ -29,14 +28,9 @@ update-builder:
 	docker pull 172.16.1.99/transwarp/walm-builder:1.0
 	@echo "update-builder done"
 
-#all:init-vendor/update-vendor update-builder generate build
+#all:init-vendor/update-vendor update-builder  build
 .PHONY: all
-all:swag generate build
-
-.PHONY: generate
-generate:
-	go generate ./pkg/version/
-	@echo "generate done"
+all:swag  build
 
 .PHONY: swag
 swag:
@@ -46,15 +40,15 @@ swag:
 
 .PHONY: build
 build:
-	@echo "build" $(TARG.Name):$(DOCKER_TAGS)
-	@docker build -t $(TARG.Name):$(DOCKER_TAGS) .
+	@echo "build" $(GING.Name):$(DOCKER_TAGS)
+	@docker build --rm -t $(GING.Name):$(DOCKER_TAGS) .
 	@docker image prune -f 1>/dev/null 2>&1
 	@echo "build done"
 
 .PHONY: install
 install:
 	$(call get_build_flags)
-	time go install -v -ldflags '$(BUILD_FLAG)' $(TRAG.Gopkg)/cmd/walm
+	time go install -v -ldflags '$(BUILD_FLAG)' $(GING.Gopkg)/cmd/walm
 
 .PHONY: test
 test:

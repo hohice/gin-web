@@ -1,0 +1,58 @@
+service: "ginS"
+home: 
+debug: false
+logformat: text
+http:
+  port: 9000
+  read_timeout: 0
+  write_timeout: 0
+secret:
+  account:
+    - "admin": "password"
+  tls: false
+  tls-verify: false
+  tls-key: ""
+  tls-cert: ""
+  tls-ca-cert: ""
+database:
+  enable: false
+  dirver: "mysql"
+  username: "root"
+  password: "password"
+  dbname: "host:port/dbname"
+helm:
+  tiller_time_out: 0
+  tillerHost: "172.26.0.5:31221"
+repo:
+  name: "stable"
+  url: "http://172.16.1.41:8880"
+kube:
+  config: "default"
+  context: ""
+  master_host: "http://172.16.1.70:8080"
+trace:
+  zipkin_url: "http://zipkin:9411/api/v1/spans"
+auth: 
+  enable: ""
+  jwtsecret: ""
+  authscheme: ""
+  tokenlookup: ""
+limit:
+  addr_map:
+    - "server1": "host1:port1"
+    - "server2": "host2:port2"
+  default_rate: 10000
+circuit:
+  "default":
+    timeout: 1000
+    max_concurrent_requests: 10
+    request_volume_threshold: 20
+    sleep_window: 5000
+    error_percent_threshold: 50
+
+  "url1":
+    timeout: 1000
+    max_concurrent_requests: 10
+    request_volume_threshold: 20
+    sleep_window: 1000
+    error_percent_threshold: 50

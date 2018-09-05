@@ -42,9 +42,7 @@ func newServCmd() *cobra.Command {
 
 func (sc *ServCmd) run() error {
 	apiErrCh := make(chan error)
-
 	serv := server.NewServer(apiErrCh)
-
 	if err := serv.StartServer(); err != nil {
 		Log.Errorf("start API server failed:%s exiting\n", err)
 		return err

@@ -6,29 +6,50 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
 	"gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { check.TestingT(t) }
 
-type settingSuit struct{}
+type settingSuit struct {
+	cleanup func()
+}
 
-var _ = check.Suite(&settingSuit{})
+var _ = check.Suite(&settingSuit{
+	cleanup: func() func() {
+		testPath, _ := os.Getwd()
+		cleanup := resetEnv()
 
-func (ss *settingSuit) Test_Init(c *check.C) {
-	testPath, err := os.Getwd()
-	c.Assert(err, check.IsNil)
+		testConfPath := filepath.Join(testPath, "/testdata")
+		os.Setenv(confEnvName, testConfPath)
+		return cleanup
+	}(),
+})
 
-	cleanup := resetEnv()
-	defer cleanup()
+/*
+func (ss *settingSuit) SetUpSuite(c *check.C) {
+	testPath, _ := os.Getwd()
+	ss.cleanup = resetEnv()
 
 	testConfPath := filepath.Join(testPath, "/testdata")
 	os.Setenv(confEnvName, testConfPath)
-	c.Log(testConfPath)
-	Init()
+}
+*/
+
+func (ss *settingSuit) TearDownSuite(c *check.C) {
+	ss.cleanup()
+}
+
+func (ss *settingSuit) Test_ReadConfigPath(c *check.C) {
+	vp := viper.New()
+	ReadConfigPath(vp)
 	c.Assert(Config.Http.HTTPPort, check.Equals, 9000)
 	c.Assert(Config.Home, check.Equals, os.Getenv("HOME")+"/.ginS")
 	c.Assert(Config.Trace.ZipkinUrl, check.Equals, "http://zipkin:9411/api/v1/spans")
+	c.Assert(Config.Limit.AddrMap["server1"], check.Equals, "host1:port1")
+	c.Assert(Config.Circuit["default"].SleepWindow, check.Equals, 5000)
+	c.Assert(Config.Circuit["url1"].SleepWindow, check.Equals, 1000)
 }
 
 var envMap = map[string]string{

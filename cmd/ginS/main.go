@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 
@@ -33,12 +35,19 @@ func newRootCmd(args []string) *cobra.Command {
 	)
 
 	flags.Parse(args)
-	setting.Init()
+	//setting.Init()
 
 	return cmd
 }
 
 func main() {
+	defer func() {
+		if p := recover(); p != nil {
+			fmt.Printf("panic recover! p: %v", p)
+			debug.PrintStack()
+		}
+	}()
+
 	cmd := newRootCmd(os.Args[1:])
 	if err := cmd.Execute(); err != nil {
 		Log.Errorln(err)

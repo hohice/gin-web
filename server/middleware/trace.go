@@ -86,11 +86,11 @@ func NewSpan(operationName string, opts ...stdot.StartSpanOption) gin.HandlerFun
 // See opentracing.SpanReferenceType
 type ParentSpanReferenceFunc func(stdot.SpanContext) stdot.StartSpanOption
 
-var CPsr = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
+var CPsrFunc = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
 	return stdot.ChildOf(spancontext)
 }
 
-var FPsr = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
+var FPsrFunc = func(spancontext stdot.SpanContext) stdot.StartSpanOption {
 	return stdot.FollowsFrom(spancontext)
 }
 

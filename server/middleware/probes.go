@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	. "github.com/hohice/gin-web/pkg/util/log"
+	"github.com/hohice/gin-web/pkg/util/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"

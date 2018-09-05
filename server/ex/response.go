@@ -37,6 +37,14 @@ func ReturnClusterNotExistError() (int, Response) {
 	return ERROR_CLUSTER_NOT_EXIST, ar
 }
 
+func ReturnLimitError() (int, Response) {
+	ar := Response{
+		Code:    ERROR_LIMIT,
+		Message: GetMsg(ERROR_LIMIT),
+	}
+	return ERROR_LIMIT, ar
+}
+
 func ReturnOK() (int, Response) {
 	ar := Response{
 		Code:    SUCCESS,

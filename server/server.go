@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/hohice/gin-web/pkg/setting"
@@ -15,6 +16,8 @@ import (
 )
 
 type Server struct {
+	ServiceName             string
+	Account                 map[string]string
 	ApiErrCh                chan error
 	Port                    int
 	TlsEnable               bool
@@ -32,7 +35,8 @@ func NewServer(errch chan error) *Server {
 	}
 	conf := setting.Config
 	return &Server{
-		ApiErrCh: errch,
+		ServiceName: conf.Service,
+		ApiErrCh:    errch,
 
 		TlsEnable:   conf.Secret.Tls,
 		TlsCertFile: conf.Secret.TlsCert,
@@ -48,39 +52,39 @@ func NewServer(errch chan error) *Server {
 	}
 }
 
-func (server *Server) StartServer() error {
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
+func (s *Server) StartServer() error {
+	sigs := make(chan os.Signal)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	go func() {
 		if err := middleware.Init(); err != nil {
-			server.ApiErrCh <- err
+			s.ApiErrCh <- err
 		} else {
 			defer middleware.Close()
 		}
 
-		router := InitRouter(server.Debug)
-		server.server.Handler = router
+		router := InitRouter(s)
+		s.server.Handler = router
 
-		if server.TlsEnable {
-			if err := server.server.ListenAndServeTLS(server.TlsCertFile, server.TlsKeyFile); err != nil {
-				server.ApiErrCh <- err
+		if s.TlsEnable {
+			if err := s.server.ListenAndServeTLS(s.TlsCertFile, s.TlsKeyFile); err != nil {
+				s.ApiErrCh <- err
 			}
 		} else {
-			if err := server.server.ListenAndServe(); err != nil {
-				server.ApiErrCh <- err
+			if err := s.server.ListenAndServe(); err != nil {
+				s.ApiErrCh <- err
 			}
 		}
 
 	}()
 
-	<-quit
+	<-sigs
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := server.server.Shutdown(ctx); err != nil {
+	if err := s.server.Shutdown(ctx); err != nil {
 		Log.Fatalln("Server Shutdown:", err)
 	}
-	server.ApiErrCh <- errors.New("Recv Signal Interrupt, Shutdown Server ...")
+	s.ApiErrCh <- errors.New("Recv Signal Interrupt, Shutdown Server ...")
 
 	return nil
 

@@ -9,7 +9,6 @@ import (
 	_ "github.com/hohice/gin-web/docs"
 	. "github.com/hohice/gin-web/pkg/util/log"
 
-	"github.com/hohice/gin-web/server/ex"
 	"github.com/hohice/gin-web/server/middleware"
 )
 
@@ -26,12 +25,16 @@ import (
 
 // @BasePath /api/v1
 
-func InitRouter(Debug bool) *gin.Engine {
+func (server *Server) InitRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
-
 	r := gin.New()
 
-	if Debug {
+	//add Probe for readiness and liveness
+	r.Use(middleware.ReadinessProbe, middleware.LivenessProbe)
+	//enable swagger UI
+	r.GET("/swagger/*any", gin.BasicAuth(gin.Accounts{server.Account}), ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	if server.Debug {
 		gin.SetMode(gin.DebugMode)
 		Log.SetLevel(logrus.DebugLevel)
 		r.Use(gin.LoggerWithWriter(Log.Out))
@@ -39,22 +42,18 @@ func InitRouter(Debug bool) *gin.Engine {
 	} else {
 		Log.SetLevel(logrus.InfoLevel)
 		//add Prometheus Metric
-		p := middleware.NewPrometheus("Walm")
+		p := middleware.NewPrometheus(server.ServiceName)
+		p.ReqCntURLLabelMappingFn = middleware.MapURLWithParamsBackToRouteTemplate
 		p.Use(r)
+		//use with auth
+		//p.UseWithAuth(r,gin.BasicAuth(gin.Accounts{server.Account})
 	}
-
-	//enable swagger UI
-	r.GET("/swagger/*any", gin.BasicAuth(gin.Accounts{"swag": "password"}), ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	//add Probe for readiness and liveness
-	r.GET("/readiness", readinessProbe)
-	r.GET("/liveness", livenessProbe)
 
 	//define api group
 	apiv1 := r.Group("/api/v1")
 
-	if !Debug {
-		apiv1.Use(middleware.SpanFromHeaders("api", middleware.CPsr, false), middleware.InjectToHeaders(false))
+	if !server.Debug {
+		apiv1.Use(middleware.SpanFromHeaders("api", middleware.CPsrFunc, false), middleware.InjectToHeaders(false))
 	}
 	{
 		podGroup := apiv1.Group("pod").Use(middleware.JWT())
@@ -64,12 +63,4 @@ func InitRouter(Debug bool) *gin.Engine {
 	}
 
 	return r
-}
-
-func readinessProbe(c *gin.Context) {
-	c.JSON(ex.ReturnOK())
-}
-
-func livenessProbe(c *gin.Context) {
-	c.JSON(ex.ReturnOK())
 }
