@@ -1,557 +1,128 @@
-basePath: /walm/api/v1
+basePath: /api/v1
 definitions:
-  cluster.Cluster:
+  config.ConfigType:
     properties:
-      apps:
-        items:
-          $ref: '#/definitions/helm.ReleaseRequest'
-        type: array
-      configvalues:
-        type: object
+      context:
+        type: string
+      name:
+        type: string
+      version:
+        type: string
     type: object
-  cluster.ReleaseList:
-    properties:
-      apps:
-        items:
-          $ref: '#/definitions/helm.ReleaseRequest'
-        type: array
-    type: object
-  ex.ApiResponse:
+  ex.Response:
     properties:
       code:
         type: integer
       message:
         type: string
     type: object
-  helm.ReleaseInfo:
-    properties:
-      chartappversion:
-        type: string
-      chartname:
-        type: string
-      chartversion:
-        type: string
-      configvalues:
-        type: object
-      dependencies:
-        type: object
-      name:
-        type: string
-      namespace:
-        type: string
-      statuscode:
-        type: integer
-      version:
-        type: integer
-    type: object
-  helm.ReleaseRequest:
-    properties:
-      chartname:
-        type: string
-      chartversion:
-        type: string
-      configvalues:
-        type: object
-      dependencies:
-        type: object
-      name:
-        type: string
-      namespace:
-        type: string
-    type: object
-  tenant.TenantInfo:
-    properties:
-      tenant_creation_time:
-        type: string
-      tenant_labels:
-        type: string
-      tenant_name:
-        type: string
-      tenant_status:
-        type: string
-      tenant_uid:
-        type: string
-    type: object
 info:
   contact:
-    email: bing.han@transwarp.io
-    name: bing.han
-    url: http://transwarp.io
-  description: cluster lifecycle manager
+    email: hohice@163.com
+    name: hohice
+    url: https://github.com/hohice
+  description: Gin Web API server starter.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: Walm
+  title: ginS
   version: 1.0.0
 paths:
-  /cluster/namespace/{namespace}/name/{name}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an Cluster
-      parameters:
-      - description: identifier of the namespace
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: the name of cluster
-        in: path
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: cluster not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - Cluster
-    get:
-      consumes:
-      - application/json
-      description: Get states of an Cluster
-      parameters:
-      - description: identifier of the namespace
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: the name of cluster
-        in: path
-        name: name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/helm.ReleaseInfo'
-            type: array
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: cluster not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - Cluster
+  /config:
     post:
       consumes:
       - application/json
-      description: Deploy an Cluster
+      description: Modify Application Config
       parameters:
-      - description: identifier of the namespace
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: the name of cluster
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: Apps of Cluster
+      - description: data of the config
         in: body
-        name: apps
+        name: config
         required: true
         schema:
-          $ref: '#/definitions/cluster.Cluster'
           type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: namespace not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - Cluster
-  /cluster/namespace/{namespace}/name/{name}/instance:
-    post:
-      consumes:
-      - application/json
-      description: Deploy an Instance into Cluster
-      parameters:
-      - description: identifier of the namespace
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: the name of cluster
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: Apps of Cluster
-        in: body
-        name: apps
-        required: true
-        schema:
-          $ref: '#/definitions/helm.ReleaseRequest'
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: namespace not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - Cluster
-  /cluster/namespace/{namespace}/name/{name}/list:
-    post:
-      consumes:
-      - application/json
-      description: Deploy an Instance list into Cluster
-      parameters:
-      - description: identifier of the namespace
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: the name of cluster
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: Apps list of Cluster
-        in: body
-        name: apps
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.ReleaseList'
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: namespace not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - Cluster
-  /instance/namespace/{namespace}/list:
-    get:
-      consumes:
-      - application/json
-      description: find the aim instance status
-      parameters:
-      - description: identifier of the instance
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: max num to display
-        in: query
-        name: max
-        type: integer
-      - description: the offset of result
-        in: query
-        name: offset
-        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: ok
           schema:
-            items:
-              $ref: '#/definitions/helm.ReleaseInfo'
-            type: array
-        "404":
-          description: Invalid status not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - instance
-  /instance/namespace/{namespace}/name/{appname}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an Appliation
-      parameters:
-      - description: identifier of the instance
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: identifier of the instance
-        in: path
-        name: appname
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "400":
           description: Invalid Name supplied!
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "404":
           description: Instance not found
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - instance
-    post:
-      consumes:
-      - application/json
-      description: deploy an instance with the givin data
-      parameters:
-      - description: identifier of the instance
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: identifier of the instance
-        in: path
-        name: appname
-        required: true
-        type: string
-      - description: ReleaseRequest of instance
-        in: body
-        name: instance
-        required: true
-        schema:
-          $ref: '#/definitions/helm.ReleaseRequest'
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "405":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "500":
           description: Server Error
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
       tags:
-      - instance
+      - config
     put:
       consumes:
       - application/json
-      description: Update an Appliation
+      description: Modify Application Config
       parameters:
-      - description: namespace of the instance
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: identifier of the instance
-        in: path
-        name: appname
-        required: true
-        type: string
-      - description: Update instance
+      - description: data of the config
         in: body
-        name: instance
+        name: config
         required: true
         schema:
-          $ref: '#/definitions/helm.ReleaseRequest'
           type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: Instance not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "405":
-          description: Invalid input
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - instance
-  /instance/namespace/{namespace}/name/{appname}/info:
-    get:
-      consumes:
-      - application/json
-      description: Get an Appliation by name with status
-      parameters:
-      - description: identifier of the instance
-        in: path
-        name: namespace
-        required: true
-        type: string
-      - description: identifier of the application
-        in: path
-        name: appname
-        required: true
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/helm.ReleaseInfo'
+            $ref: '#/definitions/ex.Response'
             type: object
         "400":
           description: Invalid Name supplied!
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "404":
           description: Instance not found
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "405":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "500":
           description: Server Error
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
       tags:
-      - instance
-  /instance/namespace/{namespace}/name/{appname}/version/{version}/rollback:
-    get:
+      - config
+  /config/name/{name}/version/{version}:
+    delete:
       consumes:
       - application/json
-      description: Rollback Instance to aim version
+      description: Delete Application Config
       parameters:
-      - description: identifier of the instance
+      - description: name of the config
         in: path
-        name: namespace
+        name: name
         required: true
         type: string
-      - description: identifier of the instance
-        in: path
-        name: appname
-        required: true
-        type: string
-      - description: identifier of the version
+      - description: version of the config
         in: path
         name: version
         required: true
@@ -562,54 +133,43 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "400":
           description: Invalid Name supplied!
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "404":
           description: Instance not found
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "405":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "500":
           description: Server Error
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
       tags:
-      - instance
-  /pod/{namespace}/{pod}/shell/{container}:
+      - config
     get:
       consumes:
       - application/json
-      description: exec shell to prompt with container
+      description: Get Application Config
       parameters:
-      - description: namespace of the pod
+      - description: name of the config
         in: path
-        name: namespace
+        name: name
         required: true
         type: string
-      - description: name of the pod
+      - description: version of the config
         in: path
-        name: pod
-        required: true
-        type: string
-      - description: container of the pod
-        in: path
-        name: container
-        required: true
-        type: string
-      - description: shell type to exec
-        in: query
-        name: shell
+        name: version
         required: true
         type: string
       produces:
@@ -618,82 +178,44 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/TerminalResponse'
+            $ref: '#/definitions/config.ConfigType'
             type: object
         "400":
           description: Invalid Name supplied!
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "404":
           description: Instance not found
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "405":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "500":
           description: Server Error
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
       tags:
-      - tenant
-  /tenant:
+      - config
+  /test/start/name/{name}/version/{version}:
     post:
       consumes:
       - application/json
-      description: Create an Tenant with spec info
+      description: Modify Application Config
       parameters:
-      - description: Request Info of tenant
-        in: body
-        name: tenant
-        required: true
-        schema:
-          $ref: '#/definitions/helm.ReleaseRequest'
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: Instance not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "405":
-          description: Invalid input
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - tenant
-  /tenant/{tenantname}:
-    delete:
-      consumes:
-      - application/json
-      description: Delete an Tenant by name
-      parameters:
-      - description: identifier of the tenant
+      - description: name of the config
         in: path
-        name: tenantname
+        name: name
+        required: true
+        type: string
+      - description: version of the config
+        in: path
+        name: version
         required: true
         type: string
       produces:
@@ -702,68 +224,28 @@ paths:
         "200":
           description: ok
           schema:
-            $ref: '#/definitions/tenant.TenantInfo'
+            $ref: '#/definitions/ex.Response'
             type: object
         "400":
           description: Invalid Name supplied!
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "404":
           description: Instance not found
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "405":
           description: Invalid input
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
         "500":
           description: Server Error
           schema:
-            $ref: '#/definitions/ex.ApiResponse'
+            $ref: '#/definitions/ex.Response'
             type: object
       tags:
-      - tenant
-    get:
-      consumes:
-      - application/json
-      description: Get an Tenant by name
-      parameters:
-      - description: identifier of the tenant
-        in: path
-        name: tenantname
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            $ref: '#/definitions/tenant.TenantInfo'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "404":
-          description: Instance not found
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "405":
-          description: Invalid input
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.ApiResponse'
-            type: object
-      tags:
-      - tenant
+      - config
 swagger: "2.0"

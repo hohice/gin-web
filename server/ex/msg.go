@@ -13,8 +13,8 @@ const (
 	ERROR_AUTH_TOKEN               = 10003
 	ERROR_AUTH                     = 10004
 
-	ERROR_CLUSTER_NOT_EXIST = http.StatusNotFound
-	ERROR_CLUSTER_EXIST     = http.StatusFound
+	ERROR_CONFIG_NOT_EXIST = http.StatusNotFound
+	ERROR_CONFIG_EXIST     = http.StatusFound
 )
 
 var MsgFlags = map[int]string{
@@ -28,8 +28,8 @@ var MsgFlags = map[int]string{
 	ERROR_AUTH_TOKEN:               "Token generate failed",
 	ERROR_AUTH:                     "Token error",
 
-	ERROR_CLUSTER_NOT_EXIST: "cluster is not exist",
-	ERROR_CLUSTER_EXIST:     "cluster already exist",
+	ERROR_CONFIG_NOT_EXIST: "config is not exist",
+	ERROR_CONFIG_EXIST:     "config already exist",
 }
 
 func GetMsg(code int) string {

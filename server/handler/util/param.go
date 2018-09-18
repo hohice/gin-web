@@ -9,6 +9,7 @@ import (
 )
 
 func GetPathParams(c *gin.Context, names []string) (values map[string]string, err error) {
+	values = map[string]string{}
 	for _, name := range names {
 		values[name] = c.Param(name)
 	}

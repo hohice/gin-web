@@ -6,18 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const versionDesc = `
-This command print version of pm.`
+const versionDesc = `This command print detail info of version .`
 
-type vCmd struct {
-}
+type vCmd struct{}
 
 func newVersionCmd() *cobra.Command {
 	vc := &vCmd{}
 
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "print version",
+		Short: "Print Version",
 		Long:  versionDesc,
 
 		RunE: func(cmd *cobra.Command, args []string) error {

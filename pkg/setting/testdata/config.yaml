@@ -1,7 +1,10 @@
 service: "ginS"
 home: 
-debug: false
-logformat: text
+debug: true
+
+log:
+  logformat: text
+  logpath: "/tmp/log"
 http:
   port: 9000
   read_timeout: 0
@@ -19,7 +22,11 @@ database:
   dirver: "mysql"
   username: "root"
   password: "password"
-  dbname: "host:port/dbname"
+  host: "host:port"
+  dbname: "dbname"
+  max_open_conn: 0
+  max_idle_conn: 0
+  max_life_time: 0
 helm:
   tiller_time_out: 0
   tillerHost: "172.26.0.5:31221"
@@ -56,3 +63,15 @@ circuit:
     request_volume_threshold: 20
     sleep_window: 1000
     error_percent_threshold: 50
+devops:
+  url: "host:port"
+  default_template_file: "path/filename"
+
+store:
+  "badger":
+     type: kv
+     enable: true
+     base_path: "base_path"
+     index_path: "index_path"
+     value_path: "value_path"
+

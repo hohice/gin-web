@@ -6,24 +6,30 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 var confEnvName = "GINS_CONF_PATH"
 
-var configPath = "/etc/ginS/"
+var DefaultConfPath = "/Users/hohice/MyWorkspace/go/src/github.com/hohice/gin-web/pkg/setting/testdata"
 
 var DefaultWalmHome = filepath.Join(HomeDir(), ".ginS")
 
 var Config Configs
 
-var regNotifyChannel []chan bool
+var configPath string
+
+var regNotifyChannel []chan struct{}
 
 type Configs struct {
-	Service   string `mapstructure:"service"`
-	Home      string `mapstructure:"home"`
-	Debug     bool   `mapstructure:"debug"`
-	Logformat string `mapstructure:"logformat"`
+	Service string `mapstructure:"service"`
+	Home    string `mapstructure:"home"`
+	Debug   bool   `mapstructure:"debug"`
+	Log     struct {
+		Logformat string `mapstructure:"logformat"`
+		LogPath   string `mapstructure:"logpath"`
+	} `mapstructure:"log"`
 
 	Http struct {
 		HTTPPort     int           `mapstructure:"port"`
@@ -41,11 +47,15 @@ type Configs struct {
 	} `mapstructure:"secret"`
 
 	Database struct {
-		Enable   bool   `mapstructure:"enable"`
-		Dirver   string `mapstructure:"mysql"`
-		Username string `mapstructure:"root"`
-		Password string `mapstructure:"password"`
-		Dbname   string `mapstructure:"dbname"`
+		Enable      bool   `mapstructure:"enable"`
+		Dirver      string `mapstructure:"mysql"`
+		Username    string `mapstructure:"root"`
+		Password    string `mapstructure:"password"`
+		Host        string `mapstructure:"host"`
+		Dbname      string `mapstructure:"dbname"`
+		MaxOpenConn int    `mapstructure:"max_open_conn"`
+		MaxIdleConn int    `mapstructure:"max_idle_conn"`
+		MaxLifeTime int    `mapstructure:"max_life_time"`
 	} `mapstructure:"database"`
 
 	Helm struct {
@@ -87,44 +97,92 @@ type Configs struct {
 		SleepWindow            int `mapstructure:"sleep_window"`
 		ErrorPercentThreshold  int `mapstructure:"error_percent_threshold"`
 	} `mapstructure:"circuit"`
+
+	Devops struct {
+		Url                 string `mapstructure:"url"`
+		DefaultTemplateFile string `mapstructure:"default_template_file"`
+	} `mapstructure:"devops"`
+
+	Store struct {
+		Bases map[string]struct {
+			Type      string `mapstructure:"type"`
+			Enable    bool   `mapstructure:"enable"`
+			BasePath  string `mapstructure:"base_path"`
+			IndexPath string `mapstructure:"index_path"`
+			ValuePath string `mapstructure:"value_path"`
+		} `mapstructure:"bases"`
+	} `mapstructure:"store"`
 }
 
 // Init sets values from the environment.
-func init() { //Init
+func Init() error { //Init
 	vp := viper.New()
 	vp.SetConfigType("yaml")
 	vp.SetConfigName("config")
-	vp.SetDefault("home", DefaultWalmHome)
 	vp.SetDefault("http.port", 8000)
+	vp.SetDefault("home", DefaultWalmHome)
 
-	ReadConfigPath(vp)
+	vp.AddConfigPath(DefaultConfPath)
+	if str, have := getEnv(); have {
+		cp := str
+		vp.AddConfigPath(cp)
+	}
+	if len(configPath) > 0 {
+		vp.AddConfigPath(configPath)
+	}
 
+	return ReadConfigPath(vp)
 }
 
-func ReadConfigPath(vp *viper.Viper) {
-	if str, have := getEnv(); have {
-		configPath = str
-	}
-	vp.AddConfigPath(configPath)
+func ReadConfigPath(vp *viper.Viper) error {
 	if err := vp.ReadInConfig(); err != nil {
-		panic("Read config file faild! " + err.Error())
+		return err
 	}
 	if err := vp.Unmarshal(&Config); err != nil {
-		panic("Unmarshal config file faild! " + err.Error())
+		return err
 	}
+
+	if err := SyncNotify(); err != nil {
+		return err
+	}
+
+	go notify()
 
 	vp.OnConfigChange(func(in fsnotify.Event) {
 		if err := vp.Unmarshal(&Config); err != nil {
-			panic("Unmarshal config file faild when update config!" + err.Error())
+			return
 		}
-		for _, pchan := range regNotifyChannel {
-			pchan <- true
-		}
+		SyncNotify()
+		go notify()
 	})
 	defer vp.WatchConfig()
+	return nil
 }
 
-func RegNotifyChannel(channel chan bool) {
+func notify() {
+	for _, pchan := range regNotifyChannel {
+		pchan <- struct{}{}
+	}
+}
+
+func SyncNotify() error {
+	for _, fun := range SyncNotifyFuncs {
+		if err := fun(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type SyncNotifyFunc func() error
+
+var SyncNotifyFuncs []SyncNotifyFunc
+
+func RegSyncNotify(snf SyncNotifyFunc) {
+	SyncNotifyFuncs = append(SyncNotifyFuncs, snf)
+}
+
+func RegNotifyChannel(channel chan struct{}) {
 	regNotifyChannel = append(regNotifyChannel, channel)
 }
 
@@ -140,4 +198,8 @@ func getEnv() (string, bool) {
 	} else {
 		return str, false
 	}
+}
+
+func AddFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&configPath, "config-path", "", "path of config file,config file name: config.yaml")
 }

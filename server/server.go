@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/hohice/gin-web/pkg/setting"
-	. "github.com/hohice/gin-web/pkg/util/log"
 	"github.com/hohice/gin-web/server/middleware"
 )
 
 type Server struct {
 	ServiceName             string
 	Account                 map[string]string
-	ApiErrCh                chan error
 	Port                    int
 	TlsEnable               bool
 	TlsCertFile, TlsKeyFile string
@@ -29,18 +27,17 @@ type Server struct {
 	server                  *http.Server
 }
 
-func NewServer(errch chan error) *Server {
-	if setting.Config.Http.HTTPPort == 0 {
-		Log.Fatalln("start API server failed, please spec Http port")
-	}
+func NewServer() *Server {
 	conf := setting.Config
+
 	return &Server{
 		ServiceName: conf.Service,
-		ApiErrCh:    errch,
 
 		TlsEnable:   conf.Secret.Tls,
 		TlsCertFile: conf.Secret.TlsCert,
 		TlsKeyFile:  conf.Secret.TlsKey,
+
+		Account: conf.Secret.Account,
 
 		Debug: conf.Debug,
 		server: &http.Server{
@@ -52,40 +49,55 @@ func NewServer(errch chan error) *Server {
 	}
 }
 
-func (s *Server) StartServer() error {
+func (s *Server) StartServer() (<-chan struct{}, <-chan error) {
+	errchan := make(chan error, 1)
+	donechan := make(chan struct{}, 1)
+
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	go func() {
-		if err := middleware.Init(); err != nil {
-			s.ApiErrCh <- err
+	startup := func() {
+		if err := middleware.Init(&setting.Config); err != nil {
+			errchan <- errors.New(fmt.Sprintf("Init Middleware: %s", err))
 		} else {
 			defer middleware.Close()
 		}
 
-		router := InitRouter(s)
+		router := s.InitRouter()
 		s.server.Handler = router
 
 		if s.TlsEnable {
 			if err := s.server.ListenAndServeTLS(s.TlsCertFile, s.TlsKeyFile); err != nil {
-				s.ApiErrCh <- err
+				errchan <- err
 			}
 		} else {
 			if err := s.server.ListenAndServe(); err != nil {
-				s.ApiErrCh <- err
+				errchan <- err
 			}
 		}
 
+	}
+
+	go startup()
+
+	shutdown := func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := s.server.Shutdown(ctx); err != nil {
+			errchan <- errors.New(fmt.Sprintf("Server Shutdown: %s", err))
+		}
+
+		donechan <- struct{}{}
+	}
+
+	go func() {
+		select {
+		case <-sigs:
+			shutdown()
+		}
 	}()
 
-	<-sigs
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := s.server.Shutdown(ctx); err != nil {
-		Log.Fatalln("Server Shutdown:", err)
-	}
-	s.ApiErrCh <- errors.New("Recv Signal Interrupt, Shutdown Server ...")
-
-	return nil
+	return donechan, errchan
 
 }

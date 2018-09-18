@@ -1,10 +1,12 @@
 package main
 
 import (
-	. "github.com/hohice/gin-web/pkg/util/log"
+	"github.com/hohice/gin-web/pkg/setting"
+	"github.com/hohice/gin-web/pkg/util/logger"
 	"github.com/hohice/gin-web/server"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const servDesc = `
@@ -12,27 +14,28 @@ This command enable a API server.
 
 $ ginS serv 
 
-Before to start serv ,you need to config the conf file 
+Before to start serv ,you need to config the config file 
 
-The file is named conf.yaml and it's path is define by  $WALM_CONF_PATH
+The file is named config.yaml and it's path is define by  $GINS_CONF_PATH
 
-and the default path is /etc/ginS/conf
+and the default path is /etc/ginS/config.yaml
 
 `
 
-type ServCmd struct {
-	oauth bool
-}
+type ServCmd struct{}
 
-func newServCmd() *cobra.Command {
+func newServCmd(fs *pflag.FlagSet) *cobra.Command {
 	inst := &ServCmd{}
 
 	cmd := &cobra.Command{
 		Use:   "serv",
-		Short: "enable a Walm Web Server",
+		Short: "Enable Web Server",
 		Long:  servDesc,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := setting.Init(); err != nil {
+				return err
+			}
 			return inst.run()
 		},
 	}
@@ -41,17 +44,14 @@ func newServCmd() *cobra.Command {
 }
 
 func (sc *ServCmd) run() error {
-	apiErrCh := make(chan error)
-	serv := server.NewServer(apiErrCh)
-	if err := serv.StartServer(); err != nil {
-		Log.Errorf("start API server failed:%s exiting\n", err)
+	log := logger.DefaultLogger
+	done, errchan := server.NewServer().StartServer()
+	select {
+	case <-done:
+		log.Infow("Recv Signal Interrupt, Shutdown Server ...")
+		return nil
+	case err := <-errchan:
+		log.Errorw("Server error exited", "error:", err)
 		return err
-	} else {
-		select {
-		case err := <-apiErrCh:
-			Log.Errorf("API server exited:%s \n", err)
-			return err
-		}
 	}
-
 }

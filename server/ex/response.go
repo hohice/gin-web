@@ -16,25 +16,25 @@ func ReturnBadRequest() (int, Response) {
 func ReturnInternalServerError(err error) (int, Response) {
 	ar := Response{
 		Code:    INTERNAL_ERROR,
-		Message: GetMsg(INTERNAL_ERROR),
+		Message: GetMsg(INTERNAL_ERROR) + ": " + err.Error(),
 	}
 	return INTERNAL_ERROR, ar
 }
 
-func ReturnClusterExistError() (int, Response) {
+func ReturnConfigExistError() (int, Response) {
 	ar := Response{
-		Code:    ERROR_CLUSTER_EXIST,
-		Message: GetMsg(ERROR_CLUSTER_EXIST),
+		Code:    ERROR_CONFIG_EXIST,
+		Message: GetMsg(ERROR_CONFIG_EXIST),
 	}
-	return ERROR_CLUSTER_EXIST, ar
+	return ERROR_CONFIG_EXIST, ar
 }
 
-func ReturnClusterNotExistError() (int, Response) {
+func ReturnConfigNotExistError() (int, Response) {
 	ar := Response{
-		Code:    ERROR_CLUSTER_NOT_EXIST,
-		Message: GetMsg(ERROR_CLUSTER_NOT_EXIST),
+		Code:    ERROR_CONFIG_NOT_EXIST,
+		Message: GetMsg(ERROR_CONFIG_NOT_EXIST),
 	}
-	return ERROR_CLUSTER_NOT_EXIST, ar
+	return ERROR_CONFIG_NOT_EXIST, ar
 }
 
 func ReturnLimitError() (int, Response) {

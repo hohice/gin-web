@@ -50,6 +50,7 @@ func (ss *settingSuit) Test_ReadConfigPath(c *check.C) {
 	c.Assert(Config.Limit.AddrMap["server1"], check.Equals, "host1:port1")
 	c.Assert(Config.Circuit["default"].SleepWindow, check.Equals, 5000)
 	c.Assert(Config.Circuit["url1"].SleepWindow, check.Equals, 1000)
+	c.Assert(Config.Devops.Url, check.Equals, "host:port")
 }
 
 var envMap = map[string]string{

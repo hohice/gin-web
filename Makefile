@@ -1,6 +1,9 @@
-GING.Name:=ginS
-GING.Gopkg:=github.com/hohice/gin-web
-GING.Version:=$(GING.Gopkg)/pkg/version
+export GO111MODULE=on
+export GOPROXY=https://goproxy.io
+
+GINS.Name:=ginS
+GINS.Gopkg:=github.com/hohice/gin-web
+GINS.Version:=$(GINS.Gopkg)/pkg/version
 
 DOCKER_TAGS=latest
 
@@ -8,9 +11,9 @@ define get_build_flags
     $(eval SHORT_VERSION=$(shell git describe --tags --always --dirty="-dev"))
     $(eval SHA1_VERSION=$(shell git show --quiet --pretty=format:%H))
 	$(eval DATE=$(shell date -u '%Y-%m-%d %H:%M:%S'))
-	$(eval BUILD_FLAG= -X $(GING.Version).ShortVersion="$(SHORT_VERSION)" \
-		-X $(GING.Version).GitSha1Version="$(SHA1_VERSION)" \
-		-X $(GING.Version).BuildDate="$(DATE)")
+	$(eval BUILD_FLAG= -X $(GINS.Version).ShortVersion="$(SHORT_VERSION)" \
+		-X $(GINS.Version).GitSha1Version="$(SHA1_VERSION)" \
+		-X $(GINS.Version).BuildDate="$(DATE)")
 endef
 
 .PHONY: init-vendor
@@ -34,21 +37,21 @@ all:swag  build
 
 .PHONY: swag
 swag:
-	@swag init -g router/routers.go
+	@swag init -g server/routers.go
 	@echo "gen-swagger done"
 
 
 .PHONY: build
 build:
-	@echo "build" $(GING.Name):$(DOCKER_TAGS)
-	@docker build --rm -t $(GING.Name):$(DOCKER_TAGS) .
+	@echo "build" $(GINS.Name):$(DOCKER_TAGS)
+	@docker build --rm -t $(GINS.Name):$(DOCKER_TAGS) .
 	@docker image prune -f 1>/dev/null 2>&1
 	@echo "build done"
 
 .PHONY: install
 install:
 	$(call get_build_flags)
-	time go install -v -ldflags '$(BUILD_FLAG)' $(GING.Gopkg)/cmd/walm
+	time go install -v -ldflags '$(BUILD_FLAG)' $(GINS.Gopkg)/cmd/$(GINS.Name)
 
 .PHONY: test
 test:

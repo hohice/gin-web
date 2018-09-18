@@ -20,6 +20,8 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hohice/gin-web/pkg/setting"
+	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -31,17 +33,14 @@ type (
 		*zap.SugaredLogger
 	}
 
-	// LoggerOptions are options for constructing a Logger
-	LoggerOptions struct {
-		Debug   bool
-		LogJSON bool
-	}
-
 	// LoggingFn is generic logging function with some additonal context
 	LoggingFn func(level logLevel, msg string, keysAndValues ...interface{})
 
 	logLevel string
 )
+
+var DefaultLogger *Logger
+var debug bool
 
 const (
 	DebugLevel logLevel = "DEBUG"
@@ -50,26 +49,67 @@ const (
 	ErrorLevel logLevel = "ERROR"
 )
 
-// NewLogger creates a new Logger instance
-func NewLogger(options LoggerOptions) (*Logger, error) {
-	config := zap.NewDevelopmentConfig()
-	config.DisableStacktrace = true
-	config.Development = false
-	config.DisableCaller = true
-	if options.LogJSON {
-		config.Encoding = "json"
+/*
+func init() {
+	configChan := make(chan struct{})
+	setting.RegNotifyChannel(configChan)
+
+	go func() {
+		for {
+			select {
+			case _, ok := <-configChan:
+				{
+					if !ok {
+						return
+					} else {
+						Build()
+					}
+				}
+			}
+		}
+	}()
+}
+*/
+
+func init() {
+	setting.RegSyncNotify(func() error {
+		return Build()
+	})
+}
+
+func Build() error {
+	conf := setting.Config
+	debug = conf.Debug
+	var config *zap.Config
+	if !conf.Debug {
+		znpc := zap.NewProductionConfig()
+		config = &znpc
+
+		//ProductionConfig put log file in log.logpath
+		config.OutputPaths = []string{conf.Log.LogPath}
+		config.ErrorOutputPaths = []string{conf.Log.LogPath}
 	} else {
-		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		zndc := zap.NewDevelopmentConfig()
+		config = &zndc
+
+		if conf.Log.Logformat == "json" {
+			config.Encoding = "json"
+		} else {
+			config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		}
 	}
-	if !options.Debug {
-		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
-	}
+
+	//config.DisableStacktrace = true
+	//config.Development = false
+	config.DisableCaller = true
+
 	logger, err := config.Build()
 	if err != nil {
-		return new(Logger), err
+		return err
 	}
 	defer logger.Sync()
-	return &Logger{logger.Sugar()}, nil
+	DefaultLogger = &Logger{logger.Sugar()}
+	return nil
 }
 
 /*
@@ -88,6 +128,17 @@ func (logger *Logger) ContextLoggingFn(c *gin.Context) LoggingFn {
 		case ErrorLevel:
 			logger.Errorc(c, msg, keysAndValues...)
 		}
+	}
+}
+
+func (logger *Logger) Print(v ...interface{}) {
+	format_msg := gorm.LogFormatter(v...)
+	msg := fmt.Sprintf("%v", format_msg)
+
+	if debug {
+		logger.Infof(msg)
+	} else {
+		logger.Errorf(msg)
 	}
 }
 

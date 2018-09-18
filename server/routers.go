@@ -1,14 +1,15 @@
 package server
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 
 	_ "github.com/hohice/gin-web/docs"
-	. "github.com/hohice/gin-web/pkg/util/log"
 
+	"github.com/hohice/gin-web/server/handler/v1/config"
 	"github.com/hohice/gin-web/server/middleware"
 )
 
@@ -24,29 +25,26 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @BasePath /api/v1
-
 func (server *Server) InitRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
 	//add Probe for readiness and liveness
-	r.Use(middleware.ReadinessProbe, middleware.LivenessProbe)
-	//enable swagger UI
-	r.GET("/swagger/*any", gin.BasicAuth(gin.Accounts{server.Account}), ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.Use(middleware.ReadinessProbe(), middleware.LivenessProbe())
+	//enable swagger UI  /swagger/index.html
+	r.GET("/swagger/*any",
+		gin.BasicAuth(server.Account),
+		ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	if server.Debug {
 		gin.SetMode(gin.DebugMode)
-		Log.SetLevel(logrus.DebugLevel)
-		r.Use(gin.LoggerWithWriter(Log.Out))
-		r.Use(gin.RecoveryWithWriter(Log.Out))
+		r.Use(gin.LoggerWithWriter(os.Stdout))
+		r.Use(gin.RecoveryWithWriter(os.Stderr))
 	} else {
-		Log.SetLevel(logrus.InfoLevel)
 		//add Prometheus Metric
-		p := middleware.NewPrometheus(server.ServiceName)
-		p.ReqCntURLLabelMappingFn = middleware.MapURLWithParamsBackToRouteTemplate
-		p.Use(r)
+		middleware.StartPrometheusProbes(r)
 		//use with auth
-		//p.UseWithAuth(r,gin.BasicAuth(gin.Accounts{server.Account})
+		//p.UseWithAuth(r,gin.BasicAuth(gin.Accounts(server.Account)
 	}
 
 	//define api group
@@ -56,9 +54,16 @@ func (server *Server) InitRouter() *gin.Engine {
 		apiv1.Use(middleware.SpanFromHeaders("api", middleware.CPsrFunc, false), middleware.InjectToHeaders(false))
 	}
 	{
-		podGroup := apiv1.Group("pod").Use(middleware.JWT())
+		configGroup := apiv1.Group("config") //.Use(middleware.JWT())
 		{
-			podGroup.GET("/:namespace/:pod/shell/:container")
+			configGroup.GET("/name/:name/version/:version", config.GetConfig)
+			configGroup.DELETE("/name/:name/version/:version", config.DelConfig)
+			configGroup.PUT("/", config.ModConfig)
+			configGroup.POST("/", config.NewConfig)
+		}
+		pipeLineGroup := apiv1.Group("test") //.Use(middleware.JWT())
+		{
+			pipeLineGroup.GET("/start/name/:name/version/:version", config.StartTest)
 		}
 	}
 

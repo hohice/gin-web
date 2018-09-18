@@ -25,17 +25,22 @@ func (ars *apiResSuite) TestResponse_returnInternalServerError(c *C) {
 	_, ise := ReturnInternalServerError(err)
 
 	c.Assert(ise.Code, Equals, http.StatusInternalServerError)
-	c.Assert(ise.Message, Equals, "Internal Server error:server error!")
+	c.Assert(ise.Message, Equals, "Internal Server error: server error!")
 }
 
-func (ars *apiResSuite) TestResponse_returnClusterExistError(c *C) {
-	_, ise := ReturnClusterExistError()
-	c.Assert(ise.Code, Equals, ERROR_CLUSTER_EXIST)
+func (ars *apiResSuite) TestResponse_returnConfigExistError(c *C) {
+	_, ise := ReturnConfigExistError()
+	c.Assert(ise.Code, Equals, ERROR_CONFIG_EXIST)
 }
 
-func (ars *apiResSuite) TestResponse_returnClusterNotExistError(c *C) {
-	_, ise := ReturnClusterNotExistError()
-	c.Assert(ise.Code, Equals, ERROR_CLUSTER_NOT_EXIST)
+func (ars *apiResSuite) TestResponse_returnConfigNotExistError(c *C) {
+	_, ise := ReturnConfigNotExistError()
+	c.Assert(ise.Code, Equals, ERROR_CONFIG_NOT_EXIST)
+}
+
+func (ars *apiResSuite) TestResponse_returnLimitError(c *C) {
+	_, ise := ReturnLimitError()
+	c.Assert(ise.Code, Equals, ERROR_LIMIT)
 }
 
 func (ars *apiResSuite) TestResponse_ReturnOK(c *C) {
