@@ -28,6 +28,52 @@ info:
   title: ginS
   version: 1.0.0
 paths:
+  /application/build/name/{name}/version/{version}:
+    post:
+      consumes:
+      - application/json
+      description: Modify Application Config
+      parameters:
+      - description: name of the config
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: version of the config
+        in: path
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            $ref: '#/definitions/ex.Response'
+            type: object
+        "400":
+          description: Invalid Name supplied!
+          schema:
+            $ref: '#/definitions/ex.Response'
+            type: object
+        "404":
+          description: Instance not found
+          schema:
+            $ref: '#/definitions/ex.Response'
+            type: object
+        "405":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/ex.Response'
+            type: object
+        "500":
+          description: Server Error
+          schema:
+            $ref: '#/definitions/ex.Response'
+            type: object
+      tags:
+      - application
   /config:
     post:
       consumes:
@@ -179,52 +225,6 @@ paths:
           description: ok
           schema:
             $ref: '#/definitions/config.ConfigType'
-            type: object
-        "400":
-          description: Invalid Name supplied!
-          schema:
-            $ref: '#/definitions/ex.Response'
-            type: object
-        "404":
-          description: Instance not found
-          schema:
-            $ref: '#/definitions/ex.Response'
-            type: object
-        "405":
-          description: Invalid input
-          schema:
-            $ref: '#/definitions/ex.Response'
-            type: object
-        "500":
-          description: Server Error
-          schema:
-            $ref: '#/definitions/ex.Response'
-            type: object
-      tags:
-      - config
-  /test/start/name/{name}/version/{version}:
-    post:
-      consumes:
-      - application/json
-      description: Modify Application Config
-      parameters:
-      - description: name of the config
-        in: path
-        name: name
-        required: true
-        type: string
-      - description: version of the config
-        in: path
-        name: version
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            $ref: '#/definitions/ex.Response'
             type: object
         "400":
           description: Invalid Name supplied!

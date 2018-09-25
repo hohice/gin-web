@@ -3,7 +3,7 @@ package devops
 import (
 	"errors"
 
-	"github.com/hohice/gin-web/pkg/setting"
+	"github.com/hohice/application-market/pkg/setting"
 )
 
 type DevopsConf struct {
@@ -35,13 +35,15 @@ var UrlTags = []UrlTag{
 
 func init() {
 	configChan := make(chan struct{})
-	setting.RegNotifyChannel(configChan)
+	doneChan := make(chan struct{})
+	setting.RegNotifyChannel(configChan, doneChan)
 	go func() {
 		for {
 			select {
 			case _, ok := <-configChan:
 				{
 					if !ok {
+						doneChan <- struct{}{}
 						return
 					} else {
 						devops := DevopsConf{
@@ -52,6 +54,7 @@ func init() {
 						for _, urlTag := range UrlTags {
 							devops.Urls[urlTag.name] = devops.Conf.Devops.Url + "/" + urlTag.path
 						}
+						doneChan <- struct{}{}
 					}
 				}
 			}

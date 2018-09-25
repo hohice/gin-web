@@ -138,13 +138,3 @@ var jsonTemp = `
 	  "id": {{.Id}}
 	}
 	{{ end }}`
-
-/*
-	"user_id": {{.UserId}},
-	  "name": "{{.Name}}",
-	  "trigger": "mu",
-	  "periodic": "string",
-	  "branch": "{{.Branch}}",
-	  "project_id": {{.ProjectId}},
-	  "id": {{.Id}}
-*/

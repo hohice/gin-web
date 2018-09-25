@@ -61,9 +61,9 @@ func (server *Server) InitRouter() *gin.Engine {
 			configGroup.PUT("/", config.ModConfig)
 			configGroup.POST("/", config.NewConfig)
 		}
-		pipeLineGroup := apiv1.Group("test") //.Use(middleware.JWT())
+		pipeLineGroup := apiv1.Group("application") //.Use(middleware.JWT())
 		{
-			pipeLineGroup.GET("/start/name/:name/version/:version", config.StartTest)
+			pipeLineGroup.GET("/build/name/:name/version/:version", config.StartTest)
 		}
 	}
 

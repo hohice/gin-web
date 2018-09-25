@@ -59,7 +59,7 @@ services:
     ports:
       - ${HTTP_PORT}:9000
     volumes:
-      - ./pkg/setting/testdata:/etc/walm
+      - ./pkg/setting/testdata:/etc/ginS
     networks: 
       - default 
       - app_net

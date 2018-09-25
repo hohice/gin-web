@@ -148,7 +148,7 @@ func NewConfig(c *gin.Context) {
 }
 
 // StartTest godoc
-// @Tags config
+// @Tags application
 // @Description Modify Application Config
 // @OperationId NewConfig
 // @Accept  json
@@ -160,7 +160,7 @@ func NewConfig(c *gin.Context) {
 // @Failure 404 {object} ex.Response "Instance not found"
 // @Failure 405 {object} ex.Response "Invalid input"
 // @Failure 500 {object} ex.Response "Server Error"
-// @Router "/test/start/name/{name}/version/{version}" [post]
+// @Router "/application/build/name/{name}/version/{version}" [post]
 func StartTest(c *gin.Context) {
 	if values, err := util.GetPathParams(c, []string{"name", "version"}); err != nil {
 		c.JSON(ex.ReturnBadRequest())

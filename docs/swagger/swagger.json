@@ -16,6 +16,73 @@
     },
     "basePath": "/api/v1",
     "paths": {
+        "/application/build/name/{name}/version/{version}": {
+            "post": {
+                "description": "Modify Application Config",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "application"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "name of the config",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "version of the config",
+                        "name": "version",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ex.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Name supplied!",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ex.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Instance not found",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ex.Response"
+                        }
+                    },
+                    "405": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ex.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Server Error",
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/ex.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/config": {
             "put": {
                 "description": "Modify Application Config",
@@ -206,73 +273,6 @@
             },
             "delete": {
                 "description": "Delete Application Config",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "config"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "name of the config",
-                        "name": "name",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "version of the config",
-                        "name": "version",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/ex.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid Name supplied!",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/ex.Response"
-                        }
-                    },
-                    "404": {
-                        "description": "Instance not found",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/ex.Response"
-                        }
-                    },
-                    "405": {
-                        "description": "Invalid input",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/ex.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Server Error",
-                        "schema": {
-                            "type": "object",
-                            "$ref": "#/definitions/ex.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/test/start/name/{name}/version/{version}": {
-            "post": {
-                "description": "Modify Application Config",
                 "consumes": [
                     "application/json"
                 ],

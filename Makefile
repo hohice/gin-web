@@ -1,5 +1,4 @@
-export GO111MODULE=on
-export GOPROXY=https://goproxy.io
+include .env
 
 GINS.Name:=ginS
 GINS.Gopkg:=github.com/hohice/gin-web
@@ -16,16 +15,21 @@ define get_build_flags
 		-X $(GINS.Version).BuildDate="$(DATE)")
 endef
 
-.PHONY: init-vendor
-init-vendor:
-	glide init
-	@echo "init-vendor done"
+default: help
 
-.PHONY: update-vendor
-update-vendor:
-	glide update
-	@echo "update-vendor done"
+##init-mod: init package module by go mod 
+.PHONY: init-mod
+init-mod:
+	go mod init
+	@echo "init-mod done"
 
+##down-mod: download dependce package module by go mod 
+.PHONY: down-mod
+down-mod:
+	go mod download
+	@echo "down-mod done"
+
+##update-builder: pull newest builder image
 .PHONY: update-builder
 update-builder:
 	docker pull 172.16.1.99/transwarp/walm-builder:1.0
@@ -66,12 +70,19 @@ unit-test:
 
 .PHONY: e2e-test
 e2e-test:
-	CGO_ENABLED=0 go test -v -a -tags="e2e" ./test/...
+	CGO_ENABLED=0 go test -v -a -tags="e2e db" ./test/...
 	@echo "e2e-test done"
 
 
 .PHONY: clean
 clean:
-	-make -C ./pkg/version clean
+	go clean
 	@echo "ok"
+
+.PHONY: help
+help: Makefile
+	@echo " Choose a command run in "$(PROJECTNAME)":"
+	@echo
+	@sed -n 's/^##//p' $< | column -t -s ':' |  sed -e 's/^/ /'
+	@echo
 

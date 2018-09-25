@@ -6,7 +6,7 @@ FROM golang:1.10.2-alpine3.7 as builder
 
 RUN apk add --no-cache git curl openssl make gcc
 
-RUN go get -u -v github.com/Masterminds/glide
+ENV GOPROXY=https://goproxy.io
 RUN go get -u -v github.com/hohice/swag
 RUN cd /go/src/github.com/hohice/swag && /usr/bin/make deps && /usr/bin/make
 
@@ -18,7 +18,6 @@ RUN mkdir -p /swagger && cd /swagger \
 
 
 FROM golang:1.10.2-alpine3.7
-
 RUN apk add --no-cache git  make curl openssl jq gcc
-
+ENV GOPROXY=https://goproxy.io
 COPY --from=builder /go/bin /go/bin
